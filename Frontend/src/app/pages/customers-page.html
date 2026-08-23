@@ -1,8 +1,52 @@
 <section hlmCard>
   <div hlmCardHeader>
-    <h2 hlmCardTitle>Customers</h2>
-    <p hlmCardDescription>Everyone who has placed an order.</p>
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <h2 hlmCardTitle>Customers</h2>
+        <p hlmCardDescription class="mt-1.5">Everyone who has placed an order.</p>
+      </div>
+
+      <hlm-dialog #addDialog>
+        <button hlmDialogTrigger hlmBtn size="sm" (click)="resetForm()">Add customer</button>
+        <hlm-dialog-content *brnDialogContent>
+          <div hlmDialogHeader>
+            <h3 hlmDialogTitle>Add customer</h3>
+            <p hlmDialogDescription>Create a customer that orders can be placed for.</p>
+          </div>
+          <div class="grid gap-4 py-2">
+            <div class="grid gap-2">
+              <label hlmLabel for="customer-id">Id</label>
+              <input hlmInput id="customer-id" placeholder="cust-001" [(ngModel)]="draft.id" />
+            </div>
+            <div class="grid gap-2">
+              <label hlmLabel for="customer-name">Name</label>
+              <input hlmInput id="customer-name" placeholder="Jane Doe" [(ngModel)]="draft.name" />
+            </div>
+            <div class="grid gap-2">
+              <label hlmLabel for="customer-email">Email</label>
+              <input
+                hlmInput
+                id="customer-email"
+                type="email"
+                placeholder="jane@example.com"
+                [(ngModel)]="draft.email"
+              />
+            </div>
+            @if (formError()) {
+              <p class="text-sm text-destructive">{{ formError() }}</p>
+            }
+          </div>
+          <div hlmDialogFooter>
+            <button hlmBtn variant="outline" hlmDialogClose>Cancel</button>
+            <button hlmBtn (click)="saveCustomer()" [disabled]="saving()">
+              {{ saving() ? 'Saving…' : 'Save customer' }}
+            </button>
+          </div>
+        </hlm-dialog-content>
+      </hlm-dialog>
+    </div>
   </div>
+
   <div hlmCardContent>
     @if (error()) {
       <p class="text-destructive">{{ error() }}</p>

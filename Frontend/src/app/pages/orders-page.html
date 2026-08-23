@@ -1,14 +1,158 @@
 <section hlmCard>
   <div hlmCardHeader>
-    <h2 hlmCardTitle>Orders</h2>
-    <p hlmCardDescription>All orders, newest first.</p>
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <h2 hlmCardTitle>Orders</h2>
+        <p hlmCardDescription class="mt-1.5">All orders, newest first.</p>
+      </div>
+
+      <hlm-dialog #createDialog>
+        <button hlmDialogTrigger hlmBtn size="sm" (click)="resetCreateForm()">New order</button>
+        <hlm-dialog-content class="sm:max-w-xl" *brnDialogContent>
+          <div hlmDialogHeader>
+            <h3 hlmDialogTitle>New order</h3>
+            <p hlmDialogDescription>Place an order for an existing customer.</p>
+          </div>
+
+          <div class="grid gap-4 py-2">
+            <!-- Customer picker with search -->
+            <div class="grid gap-2">
+              <label hlmLabel>Customer</label>
+              @if (selectedCustomer(); as customer) {
+                <div class="flex items-center justify-between rounded-md border px-3 py-1.5 text-sm">
+                  <span>
+                    {{ customer.name }}
+                    <span class="text-muted-foreground">· {{ customer.email }}</span>
+                  </span>
+                  <button hlmBtn variant="ghost" size="sm" (click)="selectedCustomer.set(null)">
+                    Change
+                  </button>
+                </div>
+              } @else {
+                <input
+                  hlmInput
+                  placeholder="Search customers by name, email or id…"
+                  [ngModel]="customerSearch()"
+                  (ngModelChange)="customerSearch.set($event)"
+                />
+                <div class="max-h-40 overflow-y-auto rounded-md border">
+                  @for (customer of filteredCustomers(); track customer.id) {
+                    <button
+                      type="button"
+                      class="w-full px-3 py-2 text-left text-sm hover:bg-accent"
+                      (click)="selectCustomer(customer)"
+                    >
+                      {{ customer.name }}
+                      <span class="text-muted-foreground">· {{ customer.email }}</span>
+                    </button>
+                  } @empty {
+                    <p class="px-3 py-2 text-sm text-muted-foreground">No matching customers.</p>
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div class="grid gap-2">
+                <label hlmLabel for="order-ref">Client reference</label>
+                <input hlmInput id="order-ref" placeholder="REF-100" [(ngModel)]="draft.clientReference" />
+              </div>
+              <div class="grid gap-2">
+                <label hlmLabel for="order-currency">Currency</label>
+                <input hlmInput id="order-currency" placeholder="ZAR" [(ngModel)]="draft.currency" />
+              </div>
+            </div>
+
+            <div class="grid gap-2">
+              <label hlmLabel for="order-notes">Notes</label>
+              <input hlmInput id="order-notes" placeholder="Optional" [(ngModel)]="draft.notes" />
+            </div>
+
+            <!-- Line items -->
+            <div class="grid gap-2">
+              <label hlmLabel>Line items</label>
+              <div class="grid gap-3 rounded-md border p-3">
+                <div class="grid grid-cols-[6.5rem_1fr_5rem_7rem_2.25rem] items-center gap-2">
+                  <span class="text-xs font-medium text-muted-foreground">SKU</span>
+                  <span class="text-xs font-medium text-muted-foreground">Name</span>
+                  <span class="text-xs font-medium text-muted-foreground">Quantity</span>
+                  <span class="text-xs font-medium text-muted-foreground">Unit price</span>
+                  <span></span>
+                </div>
+                @for (item of draftItems(); track $index; let i = $index) {
+                  <div class="grid grid-cols-[6.5rem_1fr_5rem_7rem_2.25rem] items-center gap-2">
+                    <input
+                      hlmInput
+                      [id]="'item-sku-' + i"
+                      placeholder="SKU-001"
+                      aria-label="SKU"
+                      [(ngModel)]="item.sku"
+                    />
+                    <input
+                      hlmInput
+                      [id]="'item-name-' + i"
+                      placeholder="Widget"
+                      aria-label="Name"
+                      [(ngModel)]="item.name"
+                    />
+                    <input
+                      hlmInput
+                      [id]="'item-quantity-' + i"
+                      type="number"
+                      min="1"
+                      aria-label="Quantity"
+                      [(ngModel)]="item.quantity"
+                    />
+                    <input
+                      hlmInput
+                      [id]="'item-price-' + i"
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      aria-label="Unit price"
+                      [(ngModel)]="item.unitPrice"
+                    />
+                    <button
+                      hlmBtn
+                      variant="ghost"
+                      size="sm"
+                      aria-label="Remove line item"
+                      [disabled]="draftItems().length === 1"
+                      (click)="removeItem(i)"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                }
+                <div>
+                  <button hlmBtn variant="outline" size="sm" (click)="addItem()">Add item</button>
+                </div>
+              </div>
+            </div>
+
+            @if (formError()) {
+              <p class="text-sm text-destructive">{{ formError() }}</p>
+            }
+          </div>
+
+          <div hlmDialogFooter>
+            <button hlmBtn variant="outline" hlmDialogClose>Cancel</button>
+            <button hlmBtn (click)="createOrder()" [disabled]="saving()">
+              {{ saving() ? 'Creating…' : 'Create order' }}
+            </button>
+          </div>
+        </hlm-dialog-content>
+      </hlm-dialog>
+    </div>
   </div>
+
   <div hlmCardContent>
     @if (error()) {
-      <p class="text-destructive">{{ error() }}</p>
-    } @else if (orders().length === 0) {
+      <p class="mb-4 text-destructive">{{ error() }}</p>
+    }
+    @if (orders().length === 0 && !error()) {
       <p class="text-muted-foreground">No orders yet.</p>
-    } @else {
+    } @else if (orders().length > 0) {
       <div hlmTableContainer>
         <table hlmTable>
           <thead hlmTHead>
@@ -19,6 +163,7 @@
               <th hlmTh class="text-right">Items</th>
               <th hlmTh class="text-right">Total</th>
               <th hlmTh>Created</th>
+              <th hlmTh class="text-right">Actions</th>
             </tr>
           </thead>
           <tbody hlmTBody>
@@ -32,6 +177,23 @@
                   {{ order.total | currency: order.currency }}
                 </td>
                 <td hlmTd>{{ order.createdAtUtc | date: 'medium' }}</td>
+                <td hlmTd class="text-right">
+                  <button hlmBtn variant="outline" size="sm" class="ml-2" (click)="openView(order)">
+                    View
+                  </button>
+                  @for (target of transitionsFor(order); track target) {
+                    <button
+                      hlmBtn
+                      variant="outline"
+                      size="sm"
+                      class="ml-2"
+                      [disabled]="updatingId() === order.id"
+                      (click)="changeStatus(order, target)"
+                    >
+                      {{ transitionLabel(target) }}
+                    </button>
+                  }
+                </td>
               </tr>
             }
           </tbody>
@@ -43,3 +205,78 @@
     </div>
   </div>
 </section>
+
+<!-- View order dialog (opened programmatically per row) -->
+<hlm-dialog #viewDialog>
+  <hlm-dialog-content class="sm:max-w-xl" *brnDialogContent>
+    @if (viewOrder(); as order) {
+      <div hlmDialogHeader>
+        <h3 hlmDialogTitle>Order {{ order.clientReference }}</h3>
+        <p hlmDialogDescription>
+          {{ order.customer.name }} · {{ order.customer.email }} ·
+          {{ order.createdAtUtc | date: 'medium' }}
+        </p>
+      </div>
+
+      <div class="grid gap-4 py-2">
+        <div class="flex items-center gap-6 text-sm">
+          <span>
+            <span class="text-muted-foreground">Status:</span>
+            <span class="font-medium">{{ order.status }}</span>
+          </span>
+          <span>
+            <span class="text-muted-foreground">Currency:</span>
+            <span class="font-medium">{{ order.currency }}</span>
+          </span>
+        </div>
+
+        <div hlmTableContainer>
+          <table hlmTable>
+            <thead hlmTHead>
+              <tr hlmTr>
+                <th hlmTh>SKU</th>
+                <th hlmTh>Name</th>
+                <th hlmTh class="text-right">Qty</th>
+                <th hlmTh class="text-right">Unit price</th>
+                <th hlmTh class="text-right">Line total</th>
+              </tr>
+            </thead>
+            <tbody hlmTBody>
+              @for (item of order.items; track $index) {
+                <tr hlmTr>
+                  <td hlmTd class="font-medium">{{ item.sku }}</td>
+                  <td hlmTd>{{ item.name }}</td>
+                  <td hlmTd class="text-right">{{ item.quantity }}</td>
+                  <td hlmTd class="text-right">{{ item.unitPrice | currency: order.currency }}</td>
+                  <td hlmTd class="text-right">{{ item.lineTotal | currency: order.currency }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="grid justify-end gap-1 text-sm">
+          <span>
+            <span class="text-muted-foreground">Subtotal:</span>
+            <span class="font-medium">{{ order.subtotal | currency: order.currency }}</span>
+          </span>
+          <span>
+            <span class="text-muted-foreground">Total:</span>
+            <span class="font-semibold">{{ order.total | currency: order.currency }}</span>
+          </span>
+        </div>
+
+        @if (order.notes) {
+          <div class="text-sm">
+            <span class="text-muted-foreground">Notes:</span>
+            {{ order.notes }}
+          </div>
+        }
+      </div>
+
+      <div hlmDialogFooter>
+        <button hlmBtn variant="outline" hlmDialogClose>Close</button>
+      </div>
+    }
+  </hlm-dialog-content>
+</hlm-dialog>

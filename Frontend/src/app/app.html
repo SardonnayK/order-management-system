@@ -1,0 +1,34 @@
+<main class="container">
+  <h1>{{ title() }}</h1>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else if (orders().length === 0) {
+    <p>No orders yet.</p>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Customer</th>
+          <th>Product</th>
+          <th>Quantity</th>
+          <th>Created</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (order of orders(); track order.id) {
+          <tr>
+            <td>{{ order.id }}</td>
+            <td>{{ order.customerName }}</td>
+            <td>{{ order.product }}</td>
+            <td>{{ order.quantity }}</td>
+            <td>{{ order.createdAt | date: 'medium' }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  <button (click)="loadOrders()">Refresh</button>
+</main>

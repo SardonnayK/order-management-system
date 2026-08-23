@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/Aspire/">
+    <Project Path="Aspire/OrderManagement.AppHost/OrderManagement.AppHost.csproj" />
+    <Project Path="Aspire/OrderManagement.ServiceDefaults/OrderManagement.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/Backend/">
+    <Project Path="Backend/OrderManagement.Api/OrderManagement.Api.csproj" />
+  </Folder>
+</Solution>

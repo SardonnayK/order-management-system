@@ -1,9 +1,11 @@
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using OrderManagement.Api.Data;
 using OrderManagement.Api.Models;
+using OrderManagement.Api.Services;
 
 namespace OrderManagement.Api.Endpoints;
+
+public sealed record UpdateOrderStatusRequest(OrderStatus Status);
 
 public static class OrderEndpoints
 {
@@ -25,49 +27,33 @@ public static class OrderEndpoints
                 ? Results.Ok(order)
                 : Results.NotFound());
 
-        group.MapPost("/", async (Order order, AppDbContext db) =>
+        group.MapPost("/", async (Order order, OrderService orders) =>
         {
-            if (order.Customer is null || string.IsNullOrWhiteSpace(order.Customer.Id))
+            var result = await orders.PlaceOrderAsync(order);
+            return result switch
             {
-                return Results.BadRequest(new
-                {
-                    message = "An order cannot exist without a customer. Provide a customer with a non-empty id."
-                });
-            }
+                { Success: true, Value: { WasCreated: true } outcome } =>
+                    Results.Created($"/api/orders/{outcome.Order.Id}", outcome.Order),
+                // Idempotent resubmission: same customer + client reference returns
+                // the already-stored order instead of creating a duplicate.
+                { Success: true, Value: { } outcome } => Results.Ok(outcome.Order),
+                _ => ToErrorResult(result.Error!, result.Kind),
+            };
+        });
 
-            if (order.Id == Guid.Empty)
-            {
-                order.Id = Guid.NewGuid();
-            }
-
-            if (order.CreatedAtUtc == default)
-            {
-                order.CreatedAtUtc = DateTime.UtcNow;
-            }
-
-            // Reuse the existing customer row instead of inserting a duplicate.
-            if (await db.Customers.FindAsync(order.Customer.Id) is { } existingCustomer)
-            {
-                order.Customer = existingCustomer;
-            }
-
-            db.Orders.Add(order);
-
-            try
-            {
-                await db.SaveChangesAsync();
-            }
-            catch (DbUpdateException ex) when (ex.InnerException is SqliteException { SqliteErrorCode: 19 })
-            {
-                return Results.Conflict(new
-                {
-                    message = $"An order with client reference '{order.ClientReference}' already exists for customer '{order.Customer.Id}'."
-                });
-            }
-
-            return Results.Created($"/api/orders/{order.Id}", order);
+        group.MapPatch("/{id:guid}/status", async (Guid id, UpdateOrderStatusRequest request, OrderService orders) =>
+        {
+            var result = await orders.UpdateStatusAsync(id, request.Status);
+            return result.Success ? Results.Ok(result.Value) : ToErrorResult(result.Error!, result.Kind);
         });
 
         return app;
     }
+
+    private static IResult ToErrorResult(string error, OrderErrorKind kind) => kind switch
+    {
+        OrderErrorKind.NotFound => Results.NotFound(new { message = error }),
+        OrderErrorKind.Conflict => Results.Conflict(new { message = error }),
+        _ => Results.BadRequest(new { message = error }),
+    };
 }

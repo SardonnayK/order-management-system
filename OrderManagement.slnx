@@ -4,6 +4,7 @@
     <Project Path="Aspire/OrderManagement.ServiceDefaults/OrderManagement.ServiceDefaults.csproj" />
   </Folder>
   <Folder Name="/Backend/">
+    <Project Path="Backend/OrderManagement.Api.Tests/OrderManagement.Api.Tests.csproj" />
     <Project Path="Backend/OrderManagement.Api/OrderManagement.Api.csproj" />
   </Folder>
 </Solution>

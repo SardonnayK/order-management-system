@@ -33,6 +33,7 @@ if (!string.IsNullOrEmpty(dbDirectory))
 }
 
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(connectionString));
+builder.Services.AddScoped<OrderManagement.Api.Services.OrderService>();
 
 // The Angular dev server runs on a different origin than the API.
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>

@@ -22,6 +22,11 @@ public class OrderService(AppDbContext db)
                 OrderErrorKind.Validation);
         }
 
+        if (ValidateItems(order.Items) is { } itemError)
+        {
+            return OrderResult<PlaceOrderOutcome>.Fail(itemError, OrderErrorKind.Validation);
+        }
+
         var customerId = order.Customer.Id;
 
         if (await FindByReferenceAsync(customerId, order.ClientReference) is { } existing)
@@ -91,6 +96,55 @@ public class OrderService(AppDbContext db)
         order.Status = target;
         await db.SaveChangesAsync();
         return OrderResult<Order>.Ok(order);
+    }
+
+    /// <summary>
+    /// Updates the editable parts of an order (notes, line item quantities/prices).
+    /// Rejected once the order is in a finalized state (Fulfilled or Cancelled).
+    /// </summary>
+    public async Task<OrderResult<Order>> UpdateOrderAsync(Guid id, string? notes, List<LineItem> items)
+    {
+        var order = await db.Orders
+            .Include(o => o.Customer)
+            .FirstOrDefaultAsync(o => o.Id == id);
+
+        if (order is null)
+        {
+            return OrderResult<Order>.Fail($"Order '{id}' was not found.", OrderErrorKind.NotFound);
+        }
+
+        if (order.Status is OrderStatus.Fulfilled or OrderStatus.Cancelled)
+        {
+            return OrderResult<Order>.Fail(
+                $"Order '{id}' is {order.Status} and can no longer be edited.",
+                OrderErrorKind.Conflict);
+        }
+
+        if (ValidateItems(items) is { } itemError)
+        {
+            return OrderResult<Order>.Fail(itemError, OrderErrorKind.Validation);
+        }
+
+        order.Notes = notes;
+        order.Items.Clear();
+        order.Items.AddRange(items);
+        await db.SaveChangesAsync();
+        return OrderResult<Order>.Ok(order);
+    }
+
+    private static string? ValidateItems(List<LineItem> items)
+    {
+        if (items.Count == 0)
+        {
+            return "An order must have at least one line item.";
+        }
+
+        if (items.Any(i => i.Quantity < 1 || i.UnitPrice <= 0))
+        {
+            return "Line items must have a quantity of at least 1 and a positive unit price.";
+        }
+
+        return null;
     }
 
     private Task<Order?> FindByReferenceAsync(string customerId, string clientReference) =>

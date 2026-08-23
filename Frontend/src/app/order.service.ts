@@ -14,6 +14,13 @@ export interface LineItem {
   lineTotal: number;
 }
 
+export interface LineItemInput {
+  sku: string;
+  name: string;
+  quantity: number;
+  unitPrice: number;
+}
+
 export interface Order {
   id: string;
   clientReference: string;
@@ -25,6 +32,14 @@ export interface Order {
   createdAtUtc: string;
   subtotal: number;
   total: number;
+}
+
+export interface CreateOrderPayload {
+  clientReference: string;
+  customer: Customer;
+  items: LineItemInput[];
+  currency?: string;
+  notes?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -40,7 +55,15 @@ export class OrderService {
     return this.http.get<Order>(`${this.baseUrl}/${id}`);
   }
 
-  createOrder(order: Partial<Order>): Observable<Order> {
+  createOrder(order: CreateOrderPayload): Observable<Order> {
     return this.http.post<Order>(this.baseUrl, order);
+  }
+
+  updateOrder(id: string, notes: string | null, items: LineItemInput[]): Observable<Order> {
+    return this.http.put<Order>(`${this.baseUrl}/${id}`, { notes, items });
+  }
+
+  updateStatus(id: string, status: OrderStatus): Observable<Order> {
+    return this.http.patch<Order>(`${this.baseUrl}/${id}/status`, { status });
   }
 }

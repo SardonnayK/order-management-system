@@ -7,6 +7,8 @@ namespace OrderManagement.Api.Endpoints;
 
 public sealed record UpdateOrderStatusRequest(OrderStatus Status);
 
+public sealed record UpdateOrderRequest(string? Notes, List<LineItem> Items);
+
 public static class OrderEndpoints
 {
     public static IEndpointRouteBuilder MapOrderEndpoints(this IEndpointRouteBuilder app)
@@ -39,6 +41,12 @@ public static class OrderEndpoints
                 { Success: true, Value: { } outcome } => Results.Ok(outcome.Order),
                 _ => ToErrorResult(result.Error!, result.Kind),
             };
+        });
+
+        group.MapPut("/{id:guid}", async (Guid id, UpdateOrderRequest request, OrderService orders) =>
+        {
+            var result = await orders.UpdateOrderAsync(id, request.Notes, request.Items);
+            return result.Success ? Results.Ok(result.Value) : ToErrorResult(result.Error!, result.Kind);
         });
 
         group.MapPatch("/{id:guid}/status", async (Guid id, UpdateOrderStatusRequest request, OrderService orders) =>

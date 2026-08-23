@@ -15,12 +15,7 @@ public static class OrderEndpoints
     {
         var group = app.MapGroup("/api/orders");
 
-        // Items is an owned collection, so EF includes it automatically.
-        group.MapGet("/", async (AppDbContext db) =>
-            await db.Orders
-                .Include(o => o.Customer)
-                .OrderByDescending(o => o.CreatedAtUtc)
-                .ToListAsync());
+        group.MapGet("/", async (OrderService orders) => await orders.GetOrdersAsync());
 
         group.MapGet("/{id:guid}", async (Guid id, AppDbContext db) =>
             await db.Orders

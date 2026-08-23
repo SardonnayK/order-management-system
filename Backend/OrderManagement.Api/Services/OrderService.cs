@@ -10,6 +10,15 @@ public sealed record PlaceOrderOutcome(Order Order, bool WasCreated);
 public class OrderService(AppDbContext db)
 {
     /// <summary>
+    /// Returns all orders, newest first. Items are included automatically (owned collection).
+    /// </summary>
+    public Task<List<Order>> GetOrdersAsync() =>
+        db.Orders
+            .Include(o => o.Customer)
+            .OrderByDescending(o => o.CreatedAtUtc)
+            .ToListAsync();
+
+    /// <summary>
     /// Places an order idempotently: resubmitting the same customer + client
     /// reference returns the already-stored order instead of creating a duplicate.
     /// </summary>

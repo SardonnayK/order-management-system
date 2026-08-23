@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
@@ -34,6 +35,18 @@ public static class Extensions
             // Turn on service discovery by default
             http.AddServiceDiscovery();
         });
+
+        // Log every HTTP request/response (method, path, status code, duration).
+        // Deliberately excludes headers and bodies, which can leak credentials/PII.
+        // Requires "Microsoft.AspNetCore.HttpLogging": "Information" in the app's log levels,
+        // and app.UseHttpLogging() — added by MapDefaultEndpoints.
+        builder.Services.AddHttpLogging(options =>
+            options.LoggingFields =
+                HttpLoggingFields.RequestMethod |
+                HttpLoggingFields.RequestPath |
+                HttpLoggingFields.RequestQuery |
+                HttpLoggingFields.ResponseStatusCode |
+                HttpLoggingFields.Duration);
 
         return builder;
     }
@@ -92,6 +105,9 @@ public static class Extensions
 
     public static WebApplication MapDefaultEndpoints(this WebApplication app)
     {
+        // Companion to the AddHttpLogging registration in AddServiceDefaults.
+        app.UseHttpLogging();
+
         // Adding health checks endpoints to applications in non-development environments has security implications.
         // See https://aka.ms/aspire/healthchecks for details before enabling these endpoints in non-development environments.
         if (app.Environment.IsDevelopment())

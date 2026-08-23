@@ -72,6 +72,30 @@ public sealed class OrderServiceTests : IDisposable
         Assert.Equal(25.00m, loaded.Total);
     }
 
+    [Fact]
+    public async Task GettingOrders_ReturnsThemNewestFirst()
+    {
+        // Placed deliberately out of chronological order.
+        var middle = NewOrder("REF-MIDDLE");
+        middle.CreatedAtUtc = new DateTime(2026, 8, 15, 12, 0, 0, DateTimeKind.Utc);
+        var oldest = NewOrder("REF-OLDEST");
+        oldest.CreatedAtUtc = new DateTime(2026, 8, 1, 12, 0, 0, DateTimeKind.Utc);
+        var newest = NewOrder("REF-NEWEST");
+        newest.CreatedAtUtc = new DateTime(2026, 8, 23, 12, 0, 0, DateTimeKind.Utc);
+
+        foreach (var order in new[] { middle, oldest, newest })
+        {
+            var placed = await _service.PlaceOrderAsync(order);
+            Assert.True(placed.Success);
+        }
+
+        var orders = await _service.GetOrdersAsync();
+
+        Assert.Equal(
+            new[] { "REF-NEWEST", "REF-MIDDLE", "REF-OLDEST" },
+            orders.Select(o => o.ClientReference).ToArray());
+    }
+
     [Theory]
     // From Pending
     [InlineData(OrderStatus.Pending, OrderStatus.Pending, false)]

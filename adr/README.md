@@ -10,3 +10,4 @@
 | [0006](0006-nginx-spa-hosting-with-api-reverse-proxy.md) | Nginx SPA hosting with /api reverse proxy | Accepted |
 | [0007](0007-ef-core-ensurecreated-over-migrations.md) | EF Core EnsureCreated over migrations | Accepted (final) |
 | [0008](0008-endpoint-organization-pattern.md) | Endpoint organization: one extension file per resource | Accepted |
+| [0009](0009-mixed-domain-and-data-model.md) | Mixed domain and data model (entities double as API contracts) | Accepted |

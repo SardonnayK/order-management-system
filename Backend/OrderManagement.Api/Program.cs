@@ -40,6 +40,10 @@ builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
 
 builder.Services.AddOpenApi();
 
+// Serialize enums (e.g. Order.Status) as strings in the API contract.
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -57,5 +61,6 @@ app.UseCors();
 app.MapDefaultEndpoints();
 
 app.MapOrderEndpoints();
+app.MapCustomerEndpoints();
 
 app.Run();

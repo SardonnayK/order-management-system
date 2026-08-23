@@ -2,13 +2,29 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../environments/environment';
+import { Customer } from './customer.service';
+
+export type OrderStatus = 'Pending' | 'Confirmed' | 'Fulfilled' | 'Cancelled';
+
+export interface LineItem {
+  sku: string;
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  lineTotal: number;
+}
 
 export interface Order {
-  id: number;
-  customerName: string;
-  product: string;
-  quantity: number;
-  createdAt: string;
+  id: string;
+  clientReference: string;
+  customer: Customer;
+  items: LineItem[];
+  status: OrderStatus;
+  currency: string;
+  notes: string | null;
+  createdAtUtc: string;
+  subtotal: number;
+  total: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -20,7 +36,11 @@ export class OrderService {
     return this.http.get<Order[]>(this.baseUrl);
   }
 
-  createOrder(order: Pick<Order, 'customerName' | 'product' | 'quantity'>): Observable<Order> {
+  getOrder(id: string): Observable<Order> {
+    return this.http.get<Order>(`${this.baseUrl}/${id}`);
+  }
+
+  createOrder(order: Partial<Order>): Observable<Order> {
     return this.http.post<Order>(this.baseUrl, order);
   }
 }

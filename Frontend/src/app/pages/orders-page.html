@@ -1,0 +1,45 @@
+<section hlmCard>
+  <div hlmCardHeader>
+    <h2 hlmCardTitle>Orders</h2>
+    <p hlmCardDescription>All orders, newest first.</p>
+  </div>
+  <div hlmCardContent>
+    @if (error()) {
+      <p class="text-destructive">{{ error() }}</p>
+    } @else if (orders().length === 0) {
+      <p class="text-muted-foreground">No orders yet.</p>
+    } @else {
+      <div hlmTableContainer>
+        <table hlmTable>
+          <thead hlmTHead>
+            <tr hlmTr>
+              <th hlmTh>Reference</th>
+              <th hlmTh>Customer</th>
+              <th hlmTh>Status</th>
+              <th hlmTh class="text-right">Items</th>
+              <th hlmTh class="text-right">Total</th>
+              <th hlmTh>Created</th>
+            </tr>
+          </thead>
+          <tbody hlmTBody>
+            @for (order of orders(); track order.id) {
+              <tr hlmTr>
+                <td hlmTd class="font-medium">{{ order.clientReference }}</td>
+                <td hlmTd>{{ order.customer.name }}</td>
+                <td hlmTd>{{ order.status }}</td>
+                <td hlmTd class="text-right">{{ order.items.length }}</td>
+                <td hlmTd class="text-right">
+                  {{ order.total | currency: order.currency }}
+                </td>
+                <td hlmTd>{{ order.createdAtUtc | date: 'medium' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+    <div class="mt-4">
+      <button hlmBtn variant="outline" size="sm" (click)="load()">Refresh</button>
+    </div>
+  </div>
+</section>

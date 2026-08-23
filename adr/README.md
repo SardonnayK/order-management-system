@@ -11,3 +11,4 @@
 | [0007](0007-ef-core-ensurecreated-over-migrations.md) | EF Core EnsureCreated over migrations | Accepted (final) |
 | [0008](0008-endpoint-organization-pattern.md) | Endpoint organization: one extension file per resource | Accepted |
 | [0009](0009-mixed-domain-and-data-model.md) | Mixed domain and data model (entities double as API contracts) | Accepted |
+| [0010](0010-tailwind-and-spartan-ui-component-library.md) | Tailwind CSS v4 + spartan/ui as the frontend component library | Accepted |

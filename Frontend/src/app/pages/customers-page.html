@@ -1,0 +1,37 @@
+<section hlmCard>
+  <div hlmCardHeader>
+    <h2 hlmCardTitle>Customers</h2>
+    <p hlmCardDescription>Everyone who has placed an order.</p>
+  </div>
+  <div hlmCardContent>
+    @if (error()) {
+      <p class="text-destructive">{{ error() }}</p>
+    } @else if (customers().length === 0) {
+      <p class="text-muted-foreground">No customers yet.</p>
+    } @else {
+      <div hlmTableContainer>
+        <table hlmTable>
+          <thead hlmTHead>
+            <tr hlmTr>
+              <th hlmTh>Id</th>
+              <th hlmTh>Name</th>
+              <th hlmTh>Email</th>
+            </tr>
+          </thead>
+          <tbody hlmTBody>
+            @for (customer of customers(); track customer.id) {
+              <tr hlmTr>
+                <td hlmTd class="font-medium">{{ customer.id }}</td>
+                <td hlmTd>{{ customer.name }}</td>
+                <td hlmTd>{{ customer.email }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+    <div class="mt-4">
+      <button hlmBtn variant="outline" size="sm" (click)="load()">Refresh</button>
+    </div>
+  </div>
+</section>

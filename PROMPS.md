@@ -6,9 +6,8 @@ Setup my git folder, I will be building a dotnet + angular minimal application.
 Ensure relevant folders are in the .gitignore for this stack.
 ```
 ---
-```markdown
 ## Scaffolding the Application
-
+```markdown
 ### Task
 Scaffold a complete full-stack .NET and Angular application. Use .NET Aspire to orchestrate the local development environment and generate a Docker Compose file for potential production deployment.
 
@@ -36,11 +35,63 @@ Before declaring this task complete, you must verify your work:
 Read the outputs of these checks and fix any errors before finishing.
 ```
 
-Handles the boilerplate scaffolding for a full-stack .NET and Angular application, ensuring proper configuration management, database setup, and orchestration for both local development and potential production deployment.
-
-Aspire is used to orchestrate the local development environment, while Docker Compose is set up to show competence in deployment orchestration. The `.env` file is used for configuration management, ensuring that sensitive information and environment-specific settings are not hardcoded into the application.
-
-We use .env for the Angular frontend and the .NET backend to ensure that both parts of the application can be configured easily without changing the source code. The SQLite database is used for simplicity, and its file is persisted using Docker volumes in that use case.
-
-ServiceDefaults in Aspire is used to define default settings for the application, which can be overridden by the `.env` file. This allows for a flexible configuration that can adapt to different environments (development, staging, production).
 ---
+
+## Styling the Frontend
+```markdown
+Lets install tailwind on the Angular side and make use of ShadCN as the component library.
+
+I want basic stuff like inputs, buttons, labels, modals, tables, navbars, cards.
+
+Create a basic layout with a Navbar and content section. The Navbar should have a section for Customers and a Section For Orders.
+```
+
+--- 
+
+## Domain Models
+```markdown
+Create on the API side the following models.
+
+ public enum OrderStatus
+{
+    Pending,
+    Confirmed,
+    Fulfilled,
+    Cancelled
+}
+
+public class Customer
+{
+    public string Id { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+}
+
+public class LineItem
+{
+    public string Sku { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public int Quantity { get; set; }
+    public decimal UnitPrice { get; set; }
+    public decimal LineTotal => Quantity * UnitPrice;
+}
+
+public class Order
+{
+    public Guid Id { get; set; }
+    public string ClientReference { get; set; } = string.Empty;
+    public Customer Customer { get; set; } = default!;
+    public List<LineItem> Items { get; set; } = new();
+    public OrderStatus Status { get; set; } = OrderStatus.Pending;
+    public string Currency { get; set; } = "USD";
+    public string? Notes { get; set; }
+    public DateTime CreatedAtUtc { get; set; }
+    public decimal Subtotal => Items.Sum(item => item.LineTotal);
+    public decimal Total => Subtotal;
+}
+
+
+    Make sure to set up restrictions, a order cannot exist without a customer, apply database unique restriction on customerId + order-reference number.
+
+    We mix domain model and data models for now and should mention as an explicit trade off in an ADR.
+```

@@ -1,34 +1,29 @@
-<main class="container">
-  <h1>{{ title() }}</h1>
+<header class="border-b bg-background sticky top-0 z-10">
+  <nav class="mx-auto flex h-14 max-w-5xl items-center gap-6 px-4">
+    <a routerLink="/" class="font-semibold tracking-tight">Order Management</a>
+    <div class="flex items-center gap-1">
+      <a
+        hlmBtn
+        variant="ghost"
+        size="sm"
+        routerLink="/customers"
+        routerLinkActive="bg-accent text-accent-foreground"
+      >
+        Customers
+      </a>
+      <a
+        hlmBtn
+        variant="ghost"
+        size="sm"
+        routerLink="/orders"
+        routerLinkActive="bg-accent text-accent-foreground"
+      >
+        Orders
+      </a>
+    </div>
+  </nav>
+</header>
 
-  @if (error()) {
-    <p class="error">{{ error() }}</p>
-  } @else if (orders().length === 0) {
-    <p>No orders yet.</p>
-  } @else {
-    <table>
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Customer</th>
-          <th>Product</th>
-          <th>Quantity</th>
-          <th>Created</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (order of orders(); track order.id) {
-          <tr>
-            <td>{{ order.id }}</td>
-            <td>{{ order.customerName }}</td>
-            <td>{{ order.product }}</td>
-            <td>{{ order.quantity }}</td>
-            <td>{{ order.createdAt | date: 'medium' }}</td>
-          </tr>
-        }
-      </tbody>
-    </table>
-  }
-
-  <button (click)="loadOrders()">Refresh</button>
+<main class="mx-auto max-w-5xl px-4 py-8">
+  <router-outlet />
 </main>
